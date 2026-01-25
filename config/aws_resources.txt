@@ -1,0 +1,11 @@
+
+#AWS Resources Created on Sun Jan 25 15:50:42 EST 2026
+
+BRONZE_BUCKET=ecommerce-analytics-dev-bronze-396913733976
+SILVER_BUCKET=ecommerce-analytics-dev-silver-396913733976
+GOLD_BUCKET=ecommerce-analytics-dev-gold-396913733976
+LAMBDA_FUNCTION=ecommerce-analytics-dev-ingestion
+GLUE_DATABASE=ecommerce-analytics_dev
+ATHENA_WORKGROUP=ecommerce-analytics-dev-analytics
+
+# Use these in your scripts
