@@ -1,4 +1,4 @@
-# Lambda Ingestion Module
+# Lambda Ingestion Module - Updated
 
 variable "project_name" {
   type = string
@@ -9,6 +9,10 @@ variable "environment" {
 }
 
 variable "s3_bucket_arn" {
+  type = string
+}
+
+variable "bronze_bucket_name" {
   type = string
 }
 
@@ -28,13 +32,9 @@ resource "aws_iam_role" "lambda_role" {
       }
     ]
   })
-
-  tags = {
-    Name = "Lambda Execution Role"
-  }
 }
 
-# IAM Policy for S3 Access
+# S3 Access Policy
 resource "aws_iam_role_policy" "lambda_s3_policy" {
   name = "${var.project_name}-${var.environment}-lambda-s3-policy"
   role = aws_iam_role.lambda_role.id
@@ -67,25 +67,30 @@ resource "aws_iam_role_policy" "lambda_s3_policy" {
   })
 }
 
-# Attach AWS Managed Policy for Lambda Basic Execution
+# Lambda Basic Execution Role
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Lambda Function (placeholder - we'll add code later)
+# Lambda Function
 resource "aws_lambda_function" "data_ingestion" {
-  filename      = "${path.module}/lambda_placeholder.zip"
+  filename      = "${path.root}/../lambda_function.zip"
   function_name = "${var.project_name}-${var.environment}-ingestion"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.11"
   timeout       = 60
-  memory_size   = 256
+  memory_size   = 512  # Increased for pandas/pyarrow
 
+  source_code_hash = filebase64sha256("${path.root}/../lambda_function.zip")
+  layers = [
+    "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python311:10"
+  ]
   environment {
     variables = {
-      ENVIRONMENT = var.environment
+      BRONZE_BUCKET = var.bronze_bucket_name
+      ENVIRONMENT   = var.environment
     }
   }
 
@@ -97,7 +102,7 @@ resource "aws_lambda_function" "data_ingestion" {
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.data_ingestion.function_name}"
-  retention_in_days = 7  # Keep logs for 1 week to save costs
+  retention_in_days = 7
 
   tags = {
     Name = "Lambda Logs"
@@ -106,16 +111,13 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
 
 # Outputs
 output "function_name" {
-  value       = aws_lambda_function.data_ingestion.function_name
-  description = "Lambda function name"
+  value = aws_lambda_function.data_ingestion.function_name
 }
 
 output "function_arn" {
-  value       = aws_lambda_function.data_ingestion.arn
-  description = "Lambda function ARN"
+  value = aws_lambda_function.data_ingestion.arn
 }
 
 output "role_arn" {
-  value       = aws_iam_role.lambda_role.arn
-  description = "Lambda IAM role ARN"
+  value = aws_iam_role.lambda_role.arn
 }
