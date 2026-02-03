@@ -2,7 +2,7 @@
 
 terraform {
   required_version = ">= 1.6.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -38,7 +38,7 @@ locals {
 # S3 Data Lake Module (FREE TIER - ~$0.07)
 module "s3_data_lake" {
   source = "./modules/s3"
-  
+
   project_name = var.project_name
   environment  = var.environment
 }
@@ -46,10 +46,11 @@ module "s3_data_lake" {
 # Lambda Ingestion Module (FREE TIER)
 module "lambda_ingestion" {
   source = "./modules/lambda"
-  
-  project_name  = var.project_name
-  environment   = var.environment
-  s3_bucket_arn = module.s3_data_lake.bronze_bucket_arn
+
+  project_name       = var.project_name
+  environment        = var.environment
+  s3_bucket_arn      = module.s3_data_lake.bronze_bucket_arn
+  bronze_bucket_name = module.s3_data_lake.bronze_bucket_name
 }
 
 # Glue Data Catalog Database (FREE TIER)
@@ -145,7 +146,7 @@ resource "aws_athena_workgroup" "ecommerce_analytics" {
 
   configuration {
     enforce_workgroup_configuration    = true
-    publish_cloudwatch_metrics_enabled = false  # Disable to save costs
+    publish_cloudwatch_metrics_enabled = false # Disable to save costs
 
     result_configuration {
       output_location = "s3://${module.s3_data_lake.gold_bucket_name}/athena-results/"

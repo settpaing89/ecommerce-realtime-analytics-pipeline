@@ -1,25 +1,21 @@
 #!/bin/bash
-
-# Athena Query Helper Script
-
 source config/aws_resources.sh
 
-QUERY=$1
-OUTPUT_LOCATION="s3://$GOLD_BUCKET/athena-results/"
+QUERY_FILE=$1
 
-if [ -z "$QUERY" ]; then
-    echo "Usage: ./scripts/athena_query.sh 'SELECT * FROM orders LIMIT 10'"
+if [ -z "$QUERY_FILE" ]; then
+    echo "Usage: ./scripts/run_athena_query.sh <query_file.sql>"
     exit 1
 fi
 
-echo "Running query: $QUERY"
-echo ""
+# Read query
+QUERY=$(cat $QUERY_FILE)
 
-# Start query execution
+# Run in Athena
 EXECUTION_ID=$(aws athena start-query-execution \
     --query-string "$QUERY" \
     --query-execution-context Database=$GLUE_DATABASE \
-    --result-configuration OutputLocation=$OUTPUT_LOCATION \
+    --result-configuration OutputLocation=s3://$GOLD_BUCKET/athena-results/ \
     --work-group $ATHENA_WORKGROUP \
     --query 'QueryExecutionId' \
     --output text)
@@ -27,7 +23,7 @@ EXECUTION_ID=$(aws athena start-query-execution \
 echo "Query execution ID: $EXECUTION_ID"
 echo "Waiting for results..."
 
-# Wait for query to complete
+# Wait for completion
 while true; do
     STATUS=$(aws athena get-query-execution \
         --query-execution-id $EXECUTION_ID \
@@ -36,30 +32,25 @@ while true; do
     
     if [ "$STATUS" = "SUCCEEDED" ]; then
         echo "✅ Query succeeded!"
+        
+        # Get results
+        aws athena get-query-results \
+            --query-execution-id $EXECUTION_ID \
+            --output table
+        
         break
     elif [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "CANCELLED" ]; then
-        echo "❌ Query failed!"
-        aws athena get-query-execution --query-execution-id $EXECUTION_ID
+        echo "❌ Query failed or was cancelled"
+        
+        # Get error message
+        aws athena get-query-execution \
+            --query-execution-id $EXECUTION_ID \
+            --query 'QueryExecution.Status.StateChangeReason' \
+            --output text
+        
         exit 1
     fi
     
+    echo "Status: $STATUS"
     sleep 2
 done
-
-# Get results
-echo ""
-echo "Results:"
-aws athena get-query-results \
-    --query-execution-id $EXECUTION_ID \
-    --output table
-
-# Show cost (approximate)
-DATA_SCANNED=$(aws athena get-query-execution \
-    --query-execution-id $EXECUTION_ID \
-    --query 'QueryExecution.Statistics.DataScannedInBytes' \
-    --output text)
-
-COST=$(echo "scale=6; $DATA_SCANNED / 1099511627776 * 5" | bc)
-echo ""
-echo "Data scanned: $(numfmt --to=iec-i --suffix=B $DATA_SCANNED)"
-echo "Approximate cost: \$$COST"
