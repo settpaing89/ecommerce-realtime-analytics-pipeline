@@ -17,7 +17,7 @@
 
 ## 📊 Live Demo
 
-- **📈 Interactive Dashboard:** [View on Tableau Public](https://public.tableau.com/app/profile/YOUR_PROFILE/viz/YOUR_DASHBOARD)
+- **📈 Interactive Dashboard:** [View on Tableau Public](https://public.tableau.com/views/ecommerce-analytics-dashboard/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
 - **💻 GitHub Repository:** [Source Code](https://github.com/settpaing89/ecommerce-realtime-analytics-pipeline)
 
 ---
@@ -199,7 +199,7 @@ E-commerce companies need to analyze customer behavior, track sales trends, and 
 |------------------|---------------------|
 | ![Revenue](docs/screenshots/dashboard_revenue.png) | ![Products](docs/screenshots/dashboard_top_products.png) |
 
-> *Interactive Dashboard available on [Tableau Public](#)*
+> *Interactive Dashboard available on [Tableau Public](https://public.tableau.com/views/ecommerce-analytics-dashboard/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)*
 - **Automated CI/CD pipeline** with GitHub Actions
 - **Unit tests** with >80% code coverage
 - **Data quality tests** for pipeline integrity
@@ -747,8 +747,8 @@ Contributions are welcome! Here's how you can help:
 ## 📞 Contact
 
 **Your Name**  
-📧 Email: your.email@example.com  
-💼 LinkedIn: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)  
+📧 Email: asp881999@gmail.com
+💼 LinkedIn: [linkedin.com/in/yourprofile](https://www.linkedin.com/in/toaungsettpaing/)  
 🐙 GitHub: [@settpaing89](https://github.com/settpaing89)  
 
 
@@ -766,8 +766,7 @@ If you found this project helpful or interesting:
 
 <div align="center">
 
-**Built with ❤️ by [Your 
-Name]**
+**Built with ❤️ by Aung Sett Paing**
 
 *Demonstrating production-ready data engineering skills for real-world impact*
 
