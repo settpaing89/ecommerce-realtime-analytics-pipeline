@@ -312,3 +312,27 @@ output "infrastructure_summary" {
     }
   }
 }
+
+# ============================================
+# Step Functions Outputs
+# ============================================
+
+output "step_functions_state_machine_arn" {
+  description = "ARN of the Step Functions state machine"
+  value       = aws_sfn_state_machine.pipeline.arn
+}
+
+output "step_functions_state_machine_name" {
+  description = "Name of the Step Functions state machine"
+  value       = aws_sfn_state_machine.pipeline.name
+}
+
+output "step_functions_console_url" {
+  description = "AWS Console URL for Step Functions"
+  value       = "https://console.aws.amazon.com/states/home?region=${var.aws_region}#/statemachines/view/${aws_sfn_state_machine.pipeline.arn}"
+}
+
+output "eventbridge_rule_name" {
+  description = "EventBridge rule for daily schedule"
+  value       = aws_cloudwatch_event_rule.daily_pipeline.name
+}

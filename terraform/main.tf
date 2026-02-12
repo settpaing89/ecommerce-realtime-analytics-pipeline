@@ -199,3 +199,208 @@ resource "aws_cloudwatch_dashboard" "pipeline_dashboard" {
 }
 
 # Note: All outputs are now in outputs.tf file
+
+# ============================================
+# Step Functions for Pipeline Orchestration
+# ============================================
+
+# IAM Role for Step Functions
+resource "aws_iam_role" "step_functions" {
+  name = "${var.project_name}-${var.environment}-step-functions-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "states.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# IAM Policy for Step Functions
+resource "aws_iam_role_policy" "step_functions_policy" {
+  name = "${var.project_name}-${var.environment}-step-functions-policy"
+  role = aws_iam_role.step_functions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:StartCrawler",
+          "glue:GetCrawler"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogDelivery",
+          "logs:GetLogDelivery",
+          "logs:UpdateLogDelivery",
+          "logs:DeleteLogDelivery",
+          "logs:ListLogDeliveries",
+          "logs:PutResourcePolicy",
+          "logs:DescribeResourcePolicies",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Step Functions State Machine
+resource "aws_sfn_state_machine" "pipeline" {
+  name     = "${var.project_name}-${var.environment}-pipeline"
+  role_arn = aws_iam_role.step_functions.arn
+
+  definition = jsonencode({
+    Comment = "E-Commerce Analytics Pipeline"
+    StartAt = "RunGlueCrawler"
+    States = {
+      RunGlueCrawler = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::aws-sdk:glue:startCrawler"
+        Parameters = {
+          Name = "ecommerce-analytics-dev-bronze-crawler"
+        }
+        Next = "WaitForCrawler"
+        Catch = [{
+          ErrorEquals = ["Glue.CrawlerRunningException"]
+          Next        = "WaitForCrawler"
+        }]
+        Retry = [{
+          ErrorEquals     = ["States.ALL"]
+          IntervalSeconds = 2
+          MaxAttempts     = 3
+          BackoffRate     = 2.0
+        }]
+      }
+
+      WaitForCrawler = {
+        Type    = "Wait"
+        Seconds = 60
+        Next    = "GetCrawlerStatus"
+      }
+
+      GetCrawlerStatus = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::aws-sdk:glue:getCrawler"
+        Parameters = {
+          Name = "ecommerce-analytics-dev-bronze-crawler"
+        }
+        Next = "CheckCrawlerState"
+      }
+
+      CheckCrawlerState = {
+        Type = "Choice"
+        Choices = [{
+          Variable      = "$.Crawler.State"
+          StringEquals  = "READY"
+          Next          = "PipelineComplete"
+        }]
+        Default = "WaitForCrawler"
+      }
+
+      PipelineComplete = {
+        Type = "Succeed"
+      }
+    }
+  })
+
+  logging_configuration {
+    log_destination        = "${aws_cloudwatch_log_group.step_functions.arn}:*"
+    include_execution_data = true
+    level                  = "ALL"
+  }
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# CloudWatch Log Group for Step Functions
+resource "aws_cloudwatch_log_group" "step_functions" {
+  name              = "/aws/vendedlogs/states/${var.project_name}-${var.environment}-pipeline"
+  retention_in_days = 7
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# EventBridge Rule for Daily Schedule
+resource "aws_cloudwatch_event_rule" "daily_pipeline" {
+  name                = "${var.project_name}-${var.environment}-daily-pipeline"
+  description         = "Trigger pipeline daily at 2 AM UTC"
+  schedule_expression = "cron(0 2 * * ? *)"
+  state               = "DISABLED"  # Start disabled, enable after testing
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# IAM Role for EventBridge
+resource "aws_iam_role" "eventbridge" {
+  name = "${var.project_name}-${var.environment}-eventbridge-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "events.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# IAM Policy for EventBridge
+resource "aws_iam_role_policy" "eventbridge_policy" {
+  name = "${var.project_name}-${var.environment}-eventbridge-policy"
+  role = aws_iam_role.eventbridge.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "states:StartExecution"
+      Resource = aws_sfn_state_machine.pipeline.arn
+    }]
+  })
+}
+
+# EventBridge Target
+resource "aws_cloudwatch_event_target" "step_function" {
+  rule      = aws_cloudwatch_event_rule.daily_pipeline.name
+  target_id = "StepFunctionTarget"
+  arn       = aws_sfn_state_machine.pipeline.arn
+  role_arn  = aws_iam_role.eventbridge.arn
+}
