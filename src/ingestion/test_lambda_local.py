@@ -6,7 +6,7 @@ Tests validation and enrichment WITHOUT AWS calls
 import json
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +16,7 @@ os.environ["BRONZE_BUCKET"] = "test-bucket"
 os.environ["ENVIRONMENT"] = "dev"
 
 # Import Lambda function
-from lambda_function import lambda_handler, enrich_records, validate_records
+from lambda_function import lambda_handler, enrich_records, validate_records  # noqa: E402
 
 
 class MockContext:

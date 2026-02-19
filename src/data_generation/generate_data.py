@@ -16,7 +16,6 @@ import numpy as np
 from faker import Faker
 from datetime import datetime, timedelta
 import random
-import os
 from pathlib import Path
 
 # Initialize Faker
@@ -334,7 +333,7 @@ def main():
     total_size = sum(f.stat().st_size for f in output_dir.glob("*.parquet")) / (
         1024 * 1024
     )
-    print(f"\n✅ SUCCESS!")
+    print("\n✅ SUCCESS!")
     print(
         f"Generated 4 datasets with {NUM_CUSTOMERS + NUM_PRODUCTS + NUM_ORDERS + NUM_EVENTS:,} total records"
     )

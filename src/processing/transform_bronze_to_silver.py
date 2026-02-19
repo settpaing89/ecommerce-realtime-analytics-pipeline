@@ -7,7 +7,6 @@ import pandas as pd
 import boto3
 from datetime import datetime
 import os
-import sys
 from io import BytesIO
 
 # AWS clients
@@ -219,7 +218,7 @@ def process_data_type(data_type, bronze_key):
         print(f"✓ Wrote {len(df_clean)} cleaned records to silver layer")
 
         # Print summary
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"  Input records: {len(df)}")
         print(f"  Output records: {len(df_clean)}")
         print(f"  Records removed: {len(df) - len(df_clean)}")

@@ -43,7 +43,7 @@ def run_step_functions():
     )
 
     execution_arn = response["executionArn"]
-    print(f"✅ Execution started!")
+    print("✅ Execution started!")
     print(f"Execution ARN: {execution_arn}")
     print()
 

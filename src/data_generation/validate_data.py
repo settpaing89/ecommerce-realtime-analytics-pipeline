@@ -40,12 +40,12 @@ def validate_dataset(df, name, required_columns, unique_columns, allow_nulls=Non
                 issues.append(f"Duplicate {col}: {dupes} records")
 
     if issues:
-        print(f"  ⚠️  Issues found:")
+        print("  ⚠️  Issues found:")
         for issue in issues:
             print(f"     - {issue}")
         return False
     else:
-        print(f"  ✅ All checks passed!")
+        print("  ✅ All checks passed!")
         return True
 
 
@@ -122,21 +122,21 @@ def main():
     email_dupes = customers["email"].duplicated().sum()
     if email_dupes > 0:
         print(f"⚠️  Note: {email_dupes} duplicate emails found")
-        print(f"   (This can happen in real data - shared family emails)")
+        print("   (This can happen in real data - shared family emails)")
 
     # Check orders reference valid customers
     invalid_customers = ~orders["customer_id"].isin(customers["customer_id"])
     if invalid_customers.any():
         print(f"❌ {invalid_customers.sum()} orders reference non-existent customers")
     else:
-        print(f"✅ All orders reference valid customers")
+        print("✅ All orders reference valid customers")
 
     # Check orders reference valid products
     invalid_products = ~orders["product_id"].isin(products["product_id"])
     if invalid_products.any():
         print(f"❌ {invalid_products.sum()} orders reference non-existent products")
     else:
-        print(f"✅ All orders reference valid products")
+        print("✅ All orders reference valid products")
 
     # Summary
     print("\n" + "=" * 60)
@@ -152,11 +152,11 @@ def main():
         )
 
         # Data integrity
-        print(f"\nData Integrity:")
-        print(f"  • Order-Customer links: ✅")
-        print(f"  • Order-Product links: ✅")
+        print("\nData Integrity:")
+        print("  • Order-Customer links: ✅")
+        print("  • Order-Product links: ✅")
         if email_dupes == 0:
-            print(f"  • Unique emails: ✅")
+            print("  • Unique emails: ✅")
         else:
             print(f"  • Email duplicates: ⚠️  {email_dupes} (acceptable)")
     else:

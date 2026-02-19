@@ -20,7 +20,7 @@ from datetime import datetime
 from io import BytesIO
 import os
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 # Configure logging
 logger = logging.getLogger()
@@ -277,7 +277,7 @@ def handle_direct_invocation(event: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def validate_records(records: List[Dict], data_type: str) -> tuple:
+def validate_records(records: List[Dict], data_type: str) -> tuple:  # noqa: C901
     """
     Validate records against schema
 
@@ -355,7 +355,7 @@ def enrich_records(records: List[Dict], data_type: str) -> List[Dict]:
                 enriched_record["_order_year"] = order_date.year
                 enriched_record["_order_month"] = order_date.month
                 enriched_record["_order_day"] = order_date.day
-            except:
+            except Exception:
                 pass
 
         enriched.append(enriched_record)

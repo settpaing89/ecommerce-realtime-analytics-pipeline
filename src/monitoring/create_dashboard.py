@@ -91,7 +91,13 @@ def create_dashboard():
                     "width": 24,
                     "height": 6,
                     "properties": {
-                        "query": f"SOURCE '/aws/vendedlogs/states/{project_name}-{environment}-pipeline'\n| fields @timestamp, @message\n| sort @timestamp desc\n| limit 20",
+                        "query": (
+                            f"SOURCE '/aws/vendedlogs/states/"
+                            f"{project_name}-{environment}-pipeline'\n"
+                            "| fields @timestamp, @message\n"
+                            "| sort @timestamp desc\n"
+                            "| limit 20"
+                        ),
                         "region": aws_region,
                         "title": "Recent Pipeline Logs",
                         "stacked": False,
@@ -102,7 +108,7 @@ def create_dashboard():
 
         print("Creating dashboard...")
 
-        response = cloudwatch.put_dashboard(
+        cloudwatch.put_dashboard(
             DashboardName=dashboard_name, DashboardBody=json.dumps(dashboard_body)
         )
 
