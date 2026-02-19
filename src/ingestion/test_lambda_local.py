@@ -16,7 +16,11 @@ os.environ["BRONZE_BUCKET"] = "test-bucket"
 os.environ["ENVIRONMENT"] = "dev"
 
 # Import Lambda function
-from lambda_function import lambda_handler, enrich_records, validate_records  # noqa: E402
+from lambda_function import (
+    lambda_handler,
+    enrich_records,
+    validate_records,
+)  # noqa: E402
 
 
 class MockContext:

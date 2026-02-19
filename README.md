@@ -303,7 +303,7 @@ graph LR
 
 Before you begin, ensure you have:
 - ✅ **AWS Account** with admin access
-- ✅ **Terraform 1.5+** installed ([Download](https://www.terraform.io/downloads))
+- ✅ **Terraform 1.6+** installed ([Download](https://www.terraform.io/downloads))
 - ✅ **Python 3.9+** installed ([Download](https://www.python.org/downloads/))
 - ✅ **AWS CLI** configured with credentials ([Guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html))
 - ✅ **Git** for version control
@@ -542,6 +542,79 @@ terraform validate
 # Security scan
 checkov -d .
 ```
+
+---
+
+## 🔄 CI/CD Workflow
+
+This project uses **GitHub Actions** for automated testing, validation, and security scanning on every push and pull request to `main`.
+
+### Workflow Overview
+
+| Job | Trigger | What It Does |
+|-----|---------|--------------|
+| **Run Tests** | Push / PR to `main` | Linting (flake8), formatting (black), unit tests (pytest) |
+| **Terraform Validation** | Push / PR to `main` | `terraform fmt`, `terraform init`, `terraform validate` |
+| **Security Scan** | Push / PR to `main` | Checkov static analysis on Terraform configs |
+
+### How to Trigger the Workflow
+
+**Automatically — push or merge to main:**
+```bash
+git add .
+git commit -m "feat: your change description"
+git push origin main
+# → All 3 CI jobs run automatically
+```
+
+**Via Pull Request:**
+```bash
+git checkout -b feature/my-feature
+# make your changes
+git push origin feature/my-feature
+gh pr create --base main --title "My feature" --body "Description"
+# → CI runs on the PR; must pass before merging
+```
+
+**Manually from the GitHub UI:**
+> Repo → **Actions** tab → select a workflow → **Run workflow** button
+> *(Requires adding `workflow_dispatch:` trigger to the yml file)*
+
+### Run CI Checks Locally Before Pushing
+
+Always validate locally first to avoid failed CI runs:
+
+```bash
+# 1. Activate your virtual environment
+source venv/bin/activate
+
+# 2. Lint check (flake8 — two passes, same as CI)
+flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+flake8 src/ --count --max-complexity=10 --max-line-length=127 --statistics
+
+# 3. Formatting check (black)
+black --check src/
+
+# 4. Auto-fix formatting (if black --check fails)
+black src/
+
+# 5. Run unit tests with coverage
+pytest tests/ -v --cov=src --cov-report=term-missing
+
+# 6. Terraform validation
+cd terraform
+terraform fmt -check -recursive .
+terraform init -backend=false
+terraform validate
+cd ..
+```
+
+### Workflow File Locations
+
+| File | Purpose |
+|------|---------|
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | Main CI: tests + terraform + security |
+| [.github/workflows/test_lambda.yml](.github/workflows/test_lambda.yml) | Lambda-specific unit tests |
 
 ---
 
