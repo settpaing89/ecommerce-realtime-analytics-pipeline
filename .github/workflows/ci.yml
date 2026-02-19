@@ -61,6 +61,9 @@ jobs:
         run: terraform fmt -check -recursive terraform/
         continue-on-error: true
       
+      - name: Create placeholder Lambda zip for validation
+        run: zip lambda_function.zip /dev/null
+
       - name: Terraform Init
         run: |
           cd terraform

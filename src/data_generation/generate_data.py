@@ -189,9 +189,9 @@ def generate_orders(num_orders, customers_df, products_df):
             "payment_method": random.choice(PAYMENT_METHODS),
             "status": status,
             "shipping_address": fake.address(),
-            "billing_address": fake.address()
-            if random.random() > 0.7
-            else fake.address(),  # 30% different
+            "billing_address": (
+                fake.address() if random.random() > 0.7 else fake.address()
+            ),  # 30% different
             "created_at": order_date,
             "updated_at": order_date + timedelta(days=random.randint(0, days_ago)),
         }
@@ -215,14 +215,14 @@ def generate_events(num_events, customers_df, products_df):
 
         event = {
             "event_id": f"EVT-{i+1:08d}",
-            "customer_id": random.choice(active_customers)
-            if random.random() > 0.2
-            else None,  # 20% anonymous
+            "customer_id": (
+                random.choice(active_customers) if random.random() > 0.2 else None
+            ),  # 20% anonymous
             "session_id": fake.uuid4(),
             "event_type": random.choice(EVENT_TYPES),
-            "product_id": random.choice(active_products)
-            if random.random() > 0.3
-            else None,  # 70% product-related
+            "product_id": (
+                random.choice(active_products) if random.random() > 0.3 else None
+            ),  # 70% product-related
             "event_timestamp": event_time,
             "page_url": fake.uri(),
             "referrer_url": fake.uri() if random.random() > 0.5 else None,
