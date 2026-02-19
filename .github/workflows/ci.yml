@@ -62,7 +62,7 @@ jobs:
         continue-on-error: true
       
       - name: Create placeholder Lambda zip for validation
-        run: zip lambda_function.zip /dev/null
+        run: python -c "import zipfile; zipfile.ZipFile('lambda_function.zip', 'w').close()"
 
       - name: Terraform Init
         run: |
